@@ -52,7 +52,7 @@ for zip in fblist:
             has_en_dir = False
             dir_prefix_english = None
             if is_single_depth1:
-                dir_prefix_english = top + '/english'
+                dir_prefix_english = top + '/english/'
                 for n in names:
                     if n.startswith(dir_prefix_english):
                         has_en_dir = True
@@ -63,28 +63,25 @@ for zip in fblist:
                 is_zdlf = True
 
     except Exception as e:
-        print("\t[!] failed in layout analysation: " + zp.name)
-        errfblist.append(zp)
+        print("\t[!] failed in layout analysation: " + zip.name)
+        errfblist.append(zip)
 
     if is_zdlf:
-        print("\t" + zp.stem)
+        print("\t" + zip.stem)
             
         # 1-1 xt/ -> dir of extract output
      
         dirxtfb = dirxt / top
             
         # 解压
-        with zipfile.ZipFile(zp) as z:
+        with zipfile.ZipFile(zip) as z:
             z.extractall(dirxt)
         print("\t\tok extract")
 
         # dir paths
-        dst_dir_zh = Path(".") / "out" / "zh" / zp.stem
-        dst_dir_zh.mkdir(parents=True, exist_ok=True)
-        dst_dir_en = Path(".") / "out" / "en" / zp.stem
-        dst_dir_en.mkdir(parents=True, exist_ok=True)
-        dst_dir_line = Path(".") / "out" / "line" / zp.stem
-        dst_dir_line.mkdir(parents=True, exist_ok=True)
+
+
+
         
         # 遍历
         zhcount = 0
@@ -94,6 +91,8 @@ for zip in fblist:
         # transfer
         # [!] notice the spell-sensitive feature on systems like linux
         if os.path.exists(dirxtfb / "chinese"):
+            dst_dir_zh = Path(".") / "out" / "zh" / zip.stem
+            dst_dir_zh.mkdir(parents=True, exist_ok=True)
             src_dir_zh = dirxtfb / "chinese"
             for f in src_dir_zh.iterdir():
                 if f.is_file():
@@ -102,6 +101,8 @@ for zip in fblist:
             print("\t\tok zh transfer" + " (" + str(zhcount) + ") obj")
 
         if os.path.exists(dirxtfb / "english"):
+            dst_dir_en = Path(".") / "out" / "en" / zip.stem
+            dst_dir_en.mkdir(parents=True, exist_ok=True)
             src_dir_en = dirxtfb / "english"
             for f in src_dir_en.iterdir():
                 if f.is_file():
@@ -111,6 +112,8 @@ for zip in fblist:
 
         if os.path.exists(dirxtfb / "lineart"):
             src_dir_line = dirxtfb / "lineart"
+            dst_dir_line = Path(".") / "out" / "line" / zip.stem
+            dst_dir_line.mkdir(parents=True, exist_ok=True)
             for f in src_dir_line.iterdir():
                 if f.is_file():
                     shutil.move(str(f), str(dst_dir_line / f.name))
