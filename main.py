@@ -9,10 +9,8 @@ print("[*] supported working mode: ZDLF, ZDDLF, X, complex;")
 print("checking pkgs ...")
 
 root = Path(".")
-
 zipcount = 0
 fbcount = 0
-
 ziplist = []
 fblist = []
 errfblist = []
@@ -28,106 +26,108 @@ for zp in Path(".").glob("*.zip"):
 print("\t(" + str(len(ziplist)) + ") " + "zip pkgs founded")
 print("\t(" + str(len(fblist)) + ") " + "FB pkgs detected")
 
-print("proc pkg layout analyse & transfer ...")
-for zip in fblist:
-    # check formats
-    is_zdlf = False
-    ## std ZDLF
-    try:
-        with zipfile.ZipFile(zip, 'r') as zf:
-            dirxt = Path("xt") / zip.stem
-            #zf.extractall(dir)
-            names = zf.namelist()
+if len(fblist) == 0:
+    print("[!] no FB pkgs detected")
+    exit()
+else:
+    print("proc pkg layout analyse & transfer ...")
+    for zip in fblist:
+        # check formats
+        is_zdlf = False
+        ## std ZDLF
+        try:
+            with zipfile.ZipFile(zip, 'r') as zf:
+                dirxt = Path("xt") / zip.stem
+                #zf.extractall(dir)
+                names = zf.namelist()
 
-            # D
-            depth1 = set()
-            for n in names:
-                parts = n.split('/')
-                if parts[0]:
-                    depth1.add(parts[0])
-            is_single_depth1 = len(depth1) == 1
-            top = list(depth1)[0] if is_single_depth1 else None
-
-            # L
-            has_en_dir = False
-            dir_prefix_english = None
-            if is_single_depth1:
-                dir_prefix_english = top + '/english/'
+                # D
+                depth1 = set()
                 for n in names:
-                    if n.startswith(dir_prefix_english):
-                        has_en_dir = True
-                        break
+                    parts = n.split('/')
+                    if parts[0]:
+                        depth1.add(parts[0])
+                is_single_depth1 = len(depth1) == 1
+                top = list(depth1)[0] if is_single_depth1 else None
 
-            # final
-            if is_single_depth1 and has_en_dir:
-                is_zdlf = True
+                # L
+                has_en_dir = False
+                dir_prefix_english = None
+                if is_single_depth1:
+                    dir_prefix_english = top + '/english/'
+                    for n in names:
+                        if n.startswith(dir_prefix_english):
+                            has_en_dir = True
+                            break
 
-    except Exception as e:
-        print("\t[!] failed in layout analysation: " + zip.name)
-        errfblist.append(zip)
+                # final
+                if is_single_depth1 and has_en_dir:
+                    is_zdlf = True
 
-    if is_zdlf:
-        print("\t" + zip.stem)
-            
-        # 1-1 xt/ -> dir of extract output
-     
-        dirxtfb = dirxt / top
-            
-        # 解压
-        with zipfile.ZipFile(zip) as z:
-            z.extractall(dirxt)
-        print("\t\tok extract")
+        except Exception as e:
+            print("\t[!] failed in layout analysation: " + zip.name)
+            errfblist.append(zip)
 
-        # dir paths
-
-
-
+        if is_zdlf:
+            print("\t" + zip.stem)
+                
+            # 1-1 xt/ -> dir of extract output
         
-        # 遍历
-        zhcount = 0
-        encount = 0
-        linecount = 0
-            
-        # transfer
-        # [!] notice the spell-sensitive feature on systems like linux
-        if os.path.exists(dirxtfb / "chinese"):
-            dst_dir_zh = Path(".") / "out" / "zh" / zip.stem
-            dst_dir_zh.mkdir(parents=True, exist_ok=True)
-            src_dir_zh = dirxtfb / "chinese"
-            for f in src_dir_zh.iterdir():
-                if f.is_file():
-                    shutil.move(str(f), str(dst_dir_zh / f.name))
-                    zhcount = zhcount + 1
-            print("\t\tok zh transfer" + " (" + str(zhcount) + ") obj")
+            dirxtfb = dirxt / top
+                
+            # 解压
+            with zipfile.ZipFile(zip) as z:
+                z.extractall(dirxt)
+            print("\t\tok extract")
 
-        if os.path.exists(dirxtfb / "english"):
-            dst_dir_en = Path(".") / "out" / "en" / zip.stem
-            dst_dir_en.mkdir(parents=True, exist_ok=True)
-            src_dir_en = dirxtfb / "english"
-            for f in src_dir_en.iterdir():
-                if f.is_file():
-                    shutil.move(str(f), str(dst_dir_en / f.name))
-                    encount = encount + 1
-            print("\t\tok en transfer" + " (" + str(encount) + ") obj")
+            # 遍历
+            zhcount = 0
+            encount = 0
+            linecount = 0
+                
+            # transfer
+            # [!] notice the spell-sensitive feature on systems like linux
+            if os.path.exists(dirxtfb / "chinese"):
+                dst_dir_zh = Path(".") / "out" / "zh" / zip.stem
+                dst_dir_zh.mkdir(parents=True, exist_ok=True)
+                src_dir_zh = dirxtfb / "chinese"
+                for f in src_dir_zh.iterdir():
+                    if f.is_file():
+                        shutil.move(str(f), str(dst_dir_zh / f.name))
+                        zhcount = zhcount + 1
+                print("\t\tok zh transfer" + " (" + str(zhcount) + ") obj")
 
-        if os.path.exists(dirxtfb / "lineart"):
-            src_dir_line = dirxtfb / "lineart"
-            dst_dir_line = Path(".") / "out" / "line" / zip.stem
-            dst_dir_line.mkdir(parents=True, exist_ok=True)
-            for f in src_dir_line.iterdir():
-                if f.is_file():
-                    shutil.move(str(f), str(dst_dir_line / f.name))
-                    linecount = linecount + 1
-            print("\t\tok line transfer" + " (" + str(linecount) + ") obj")
+            if os.path.exists(dirxtfb / "english"):
+                dst_dir_en = Path(".") / "out" / "en" / zip.stem
+                dst_dir_en.mkdir(parents=True, exist_ok=True)
+                src_dir_en = dirxtfb / "english"
+                for f in src_dir_en.iterdir():
+                    if f.is_file():
+                        shutil.move(str(f), str(dst_dir_en / f.name))
+                        encount = encount + 1
+                print("\t\tok en transfer" + " (" + str(encount) + ") obj")
 
-        # end
-        shutil.rmtree(dirxt)
-        print("\t\tok xtfb dir cleaned")
-        print("\t\tok process")
+            if os.path.exists(dirxtfb / "lineart"):
+                src_dir_line = dirxtfb / "lineart"
+                dst_dir_line = Path(".") / "out" / "line" / zip.stem
+                dst_dir_line.mkdir(parents=True, exist_ok=True)
+                for f in src_dir_line.iterdir():
+                    if f.is_file():
+                        shutil.move(str(f), str(dst_dir_line / f.name))
+                        linecount = linecount + 1
+                print("\t\tok line transfer" + " (" + str(linecount) + ") obj")
 
-    else: 
-        badfblist.append(zip)
+            # end
+            shutil.rmtree(dirxt)
+            print("\t\tok xtfb dir cleaned")
+            print("\t\tok process")
 
-print("bad layout FB pkgs:")
-for bad in badfblist:
-    print("\t" + bad.stem)
+        else: 
+            badfblist.append(zip)
+
+if len(badfblist) == 0:
+    print("no bad layout FB pkgs found")
+else:
+    print("bad layout FB pkgs:")
+    for bad in badfblist:
+        print("\t" + bad.stem)
